@@ -1,0 +1,464 @@
+<!doctype html>
+<head>
+    <title>AEB ESG Service</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}"> -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+    <!-- Ajax -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.1/socket.io.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    
+    <style>
+        body {
+          padding-top: 64px;
+        }
+
+        .file-input-container {
+            position: relative;
+        }
+
+        #file-input {
+            width: 100%;
+        }
+
+        #file-label {
+            font-size: 0.8em; /* 字體大小 */
+            color: #636363;    /* 字體顏色 */
+        }
+
+        .file-types {
+            background-color: #f0f0f0;
+            border-radius: 4px; /* 圓角 */
+            padding: 2px 4px;   /* 內間距 */
+        }
+
+        .sticky-element {
+            position: sticky;
+            top: 72px;
+        }
+
+        .toast {
+            position: fixed; /* 固定位置 */
+            top: 72px; /* 距離頂部20px */
+            right: 14px; /* 距離右側20px */
+            z-index: 9999; /* 確保它在其他元素之上 */
+        }
+
+        .custom-header {
+            background-color: #495057; /* 灰色背景 */
+            color: #ffffff; /* 白色字體 */
+        }
+
+    </style>
+</head>
+<html>
+   <body>
+     <main>
+
+        <ul class="nav navbar-light  fixed-top align-items-center" style="background-color: #83B81A; box-shadow: 0px 3px 10px rgba(0,0,0,0.3);">
+            <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">
+                    <img src="{{ url_for('static', filename='images/aeb_icon.png') }}" width="100" height="50" class="d-inline-block align-top" alt="AEB home">
+                </a>
+            </li>
+            <li class="nav-item">您好! 歡迎來到 OCR 智慧碳排系統!</li>
+
+            {% if formInfo_data_ary %}
+            <li class="nav-item ml-auto me-3">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        切換頁面
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% for p in formInfo_data_ary %}
+                        <li><a class="dropdown-item" href="#recognizer_table_header{{ loop.index }}">頁面 {{ loop.index }}</a></li>
+                        {% endfor %}
+                    </ul>
+                  </div>
+            </li>
+            {% endif %}
+
+            <li class="nav-item {{ '' if formInfo_data_ary else 'ml-auto' }} mr-3">
+                <a href="{{ url_for('index') }}" class="btn btn-light btn-sm">
+                    <img src="{{ url_for('static', filename='images/logout.png') }}" width="35" height="35" class="d-inline-block align-top" alt="logout">
+                </a>
+            </li>
+        </ul>
+
+
+        <!-- 辨識失敗時的錯誤訊息 -->
+        {% if flag_error == "true" %}
+        <div role="alert" aria-live="assertive" aria-atomic="true" class="toast" id="alertToast" data-autohide="true" data-delay="3000">
+            <div class="toast-header bg-danger text-white">
+                <strong class="mr-auto">辨識失敗</strong>
+                <small>now</small>
+                <button type="button" class="ml-2 mb-1 close" id="closeToastButton" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body">
+                該檔案無法成功辨識欄位，請重新上傳!
+            </div>
+        </div>
+        {% endif %}
+
+
+
+        <div class="px-4 py-3 my-2 text-left">
+            <form action="{{url_for('upload_file')}}" method="post" enctype="multipart/form-data" id="upload_form">
+
+                <div class="form-group">
+                    <h4><strong>欲辨識單據檔案</strong></h4>
+                    <hr>
+
+                    <div class="form-check form-check-inline">
+                        <label class="form-check-label" for="singleRecognition"><h5>種類: </h5></label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1" checked>
+                        <label class="form-check-label" for="inlineRadio1"><strong>台電繳費憑證</strong></label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option2">
+                        <label class="form-check-label" for="inlineRadio2"><strong>台水繳費憑證</strong></label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" value="option3" disabled>
+                        <label class="form-check-label" for="inlineRadio3"><strong>其他 (尚未開發)</strong></label>
+                    </div>
+
+                    <br>
+                    <div class="form-check form-check-inline">
+                        <label class="form-check-label" for="singleRecognition"><h5>類型: </h5></label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="Recognition_opt" id="singleRecognition" value="single" checked>
+                        <label class="form-check-label" for="singleRecognition"><strong>單一份</strong> (1頁)</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="Recognition_opt" id="batchRecognition" value="batch">
+                        <label class="form-check-label" for="batchRecognition"><strong>批量</strong> (單次上限12頁, <span style="color:red;">只接收</span> <span class="file-types">.pdf</span>)</label>
+                    </div>
+
+                    <br><br>
+                    <input type="file" class="form-control" name="upload_file"required>
+                    <label id="file-label"> (檔案格式: <span class="file-types">.pdf</span> <span class="file-types">.jpg</span> <span class="file-types">.jpeg</span> <span class="file-types">.png</span>)</label>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-secondary" id="upload_file_btn">上傳</button>
+                    {% if formInfo_data or formInfo_data_ary %}
+                    <input type="checkbox" class="btn-check" id="btn-check-outlined" checked>
+                    <label class="btn btn-outline-info" style="color: #ffffff;" for="btn-check-outlined" id="preview_button">預覽</label>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        
+        
+        <!-- Modal -->
+        <div class="modal fade" id="file_submit" tabindex="-1" aria-labelledby="fileModalLabel" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog" role="document" style="margin-top: 4%;">
+                <div class="modal-content">
+
+                    <div class="modal-header d-flex align-items-end">
+                        <img src="{{ url_for('static', filename='images/loading.gif') }}" width="50" height="50" class="d-inline-block align-top" alt="AEB home">
+                        <div class="progress" style="width: 85%;">
+                            <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div id="progress-text"></div></div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-body" id="jsonData">
+                        <h4><strong>辨識中, 請稍後...</strong></h4>
+                        <p>完成後，該視窗會自動關閉!</p>
+                    </div>
+                    <div class="modal-footer text-right">
+                        <p>Copyright © 2023 AEB OCR_service</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="px-4 py-3 my-2 text-center">
+            
+            {% if formInfo_data or formInfo_data_ary %}
+            <div class="row">
+                <div class="col-md-7" id="card_view">
+            {% endif %}
+
+                {% if Recognition_opt == "single" %}
+                    <div class="card">
+                        <div class="card-header custom-header"><h4>以下為單據辨識結果</h4></div>
+
+                        <div class="card-body">
+                            <form method="post" action="{{url_for('api')}}" class="recognizer_table">
+        
+                                {% if formInfo_data %}
+                                <table class="table table-hover">
+                                    <tbody>
+                                        
+                                        {% for key, value in formInfo_data.items() %}
+                                        <tr>
+                                            <th scope="row">{{ loop.index }}</th>
+
+                                            {% if value is mapping %}
+                                            <td>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="1_{{ loop.index }}_title" name="1_{{ loop.index }}_group" value="{{ key|replace('\n', ' ')|replace('\r', ' ') }}" required>
+                                                    <div class="input-group-append">                
+                                                        <button type="button" class="addRow btn btn-success btn-sm">&plus;</button>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <table class="subTable table table-sm">
+                                                    {% set row_index = loop.index %}
+                                                    {% for subkey, subvalue in value.items() %}
+                                                    <tr class="subTableRow">
+                                                        <td><button type="button" id="removeRow" class="btn btn-danger btn-sm" style="padding: 2px 6px; font-size: 12px;">&times;</button></td>
+                                                        <td><input type="text" class="form-control" id="1_{{row_index}}_{{ loop.index }}_subtitle" name="1_{{row_index}}_{{ loop.index }}_subtitle" value="{{ subkey|replace('\n', ' ')|replace('\r', ' ') }}" required></td>
+                                                        <td><input type="text" class="form-control" id="1_{{row_index}}_{{ loop.index }}_subvalue" name="1_{{row_index}}_{{ loop.index }}_subvalue" value="{{ subvalue|replace('\n', ' ')|replace('\r', ' ') }}" required></td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </table>
+                                            </td>
+                                            {% else %}
+                                            <td><input type="text" class="form-control" id="1_{{ loop.index }}_title" name="1_{{ loop.index }}_title" value="{{ key|replace('\n', ' ')|replace('\r', ' ') }}" required></td>
+                                            <td><input type="text" class="form-control" id="1_{{ loop.index }}_value" name="1_{{ loop.index }}_value" value="{{ value|replace('\n', ' ')|replace('\r', ' ') }}" required></td>
+                                            {% endif %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+
+                                <div id="submit_area"><button type="submit" class="btn btn-secondary" id="recognizer_table_submit">提交</button></div>
+                                <div id="url_OCR_dashboard" data-url="{{ url_for('OCR_dashboard') }}"></div>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+
+                {% elif Recognition_opt == "batch" %}
+                    
+                    <form method="post" action="{{url_for('api')}}" class="recognizer_table">
+                    
+                        {% for formInfo_data in formInfo_data_ary %}
+                        <div class="card">
+                            <div class="card-header custom-header" id="recognizer_table_header{{loop.index}}"><h4>以下為單據辨識結果 (P.{{loop.index}})</h4></div>
+
+                            <div class="card-body">
+                                
+                                {% if formInfo_data %}
+                                <table class="table table-hover">
+                                    <tbody>
+                                        {% set page_index = loop.index %}
+                                        {% for key, value in formInfo_data.items() %}
+                                        <tr>
+                                            <th scope="row">{{ loop.index }}</th>
+        
+                                            {% if value is mapping %}
+                                            <td>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="{{ page_index }}_{{ loop.index }}_title" name="{{ page_index }}_{{ loop.index }}_group" value="{{ key|replace('\n', ' ')|replace('\r', ' ') }}" required>
+                                                    <div class="input-group-append">                
+                                                        <button type="button" class="addRow btn btn-success btn-sm">&plus;</button>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <table class="subTable table table-sm">
+                                                    {% set row_index = loop.index %}
+                                                    {% for subkey, subvalue in value.items() %}
+                                                    <tr class="subTableRow">
+                                                        <td><button type="button" id="removeRow" class="btn btn-danger btn-sm" style="padding: 2px 6px; font-size: 12px;">&times;</button></td>
+                                                        <td><input type="text" class="form-control" id="{{ page_index }}_{{row_index}}_{{ loop.index }}_subtitle" name="{{ page_index }}_{{row_index}}_{{ loop.index }}_subtitle" value="{{ subkey|replace('\n', ' ')|replace('\r', ' ') }}" required></td>
+                                                        <td><input type="text" class="form-control" id="{{ page_index }}_{{row_index}}_{{ loop.index }}_subvalue" name="{{ page_index }}_{{row_index}}_{{ loop.index }}_subvalue" value="{{ subvalue|replace('\n', ' ')|replace('\r', ' ') }}" required></td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </table>
+                                            </td>
+                                            {% else %}
+                                            <td><input type="text" class="form-control" id="{{ page_index }}_{{ loop.index }}_title" name="{{ page_index }}_{{ loop.index }}_title" value="{{ key|replace('\n', ' ')|replace('\r', ' ') }}" required></td>
+                                            <td><input type="text" class="form-control" id="{{ page_index }}_{{ loop.index }}_value" name="{{ page_index }}_{{ loop.index }}_value" value="{{ value|replace('\n', ' ')|replace('\r', ' ') }}" required></td>
+                                            {% endif %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% endif %}
+                                
+                            </div>
+                        </div><br><br>
+                        {% endfor %}
+                        <div id="submit_area"><button type="submit" class="btn btn-secondary" id="recognizer_table_submit">全部提交</button></div>
+                        <div id="url_OCR_dashboard" data-url="{{ url_for('OCR_dashboard') }}"></div>
+                    </form>
+
+                {% else %}
+                    <div class="card">
+                        <div class="card-header custom-header"><h4>以下為單據辨識結果</h4></div>
+                        <div class="card-body">
+                            <form method="post" action="{{url_for('api')}}" class="recognizer_table">
+                                <p>請先上傳檔案!</p>
+                                <img src="{{ url_for('static', filename='images/upload_file.png') }}" width="75" height="75"alt="upload file first,please!">
+                            </form>
+                        </div>
+                    </div>
+                {% endif %}
+
+            {% if formInfo_data or formInfo_data_ary %}
+                </div>
+
+                <!-- 檔案預覽視窗 -->
+                <div class="col-md-5" id="file_preview">
+                    <div class="sticky-element">
+                        <div class="embed-responsive embed-responsive-1by1" style="border: 1px solid #ccc;">
+                            <embed src="{{ url_for('static', filename='current_file/' + process_fileName) }}" type="application/pdf" class="embed-responsive-item" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div></br></br>
+     </main>      
+   </body>
+</html>
+
+
+<script>
+
+    $(document).ready(function(){
+        var toastObj = document.getElementById('alertToast');
+        if (toastObj) {
+            var toast = new bootstrap.Toast(toastObj, { autohide: true, delay: 3000 });
+            toast.show();
+
+            $('#closeToastButton').click(function() {
+                toast.hide();
+            });
+        }
+    });
+
+    
+    // var table_lengths = "{{formInfoData_lengths|default({})}}";
+    // var correctedString = table_lengths.replace(/&#39;/g, "\""); // 將HTML實體轉換為雙引號
+    // var table_lengths = JSON.parse(correctedString);
+    // // table_lengths = {
+    // //     "total_length": len(),
+    // //     "sub_lengths": [len()]
+    // // }
+
+
+
+    $(document).ready(function() {
+        $('#upload_file_btn').click(function(e) {
+            var fileName = $('input[type="file"]').val();
+            if(fileName !== '') {
+                $('#file_submit').modal('show');  // 手動打開模態窗口
+                $('#upload_form').submit();  // 手動提交表單
+
+                // 開啟進度監聽
+                console.log("pass")
+                var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port, {'transports': ['polling']});
+                socket.on('update_progress', function(msg) {
+                    var percentage = (msg.current_page / msg.total_pages) * 100;
+                    document.getElementById('progress-bar').style.width = percentage + '%';
+                    document.getElementById('progress-text').textContent = '(' + msg.current_page + '/' + msg.total_pages + ')';
+                });
+            }
+        });
+    });
+
+
+
+    var flow_num = 1;   //一個用於防止name tag不重複的流水號
+    $(document).on('click', '.addRow', function () {
+
+        var row_id = $(this).closest('tr').find('.subTableRow input').attr('id');
+        var curr_pageNum = row_id[0];
+        var index_str = curr_pageNum + '_' + flow_num;
+        flow_num++;
+
+        // table_lengths.sub_lengths[curr_rowNum-5]++;  //第五個元素開始有subtable
+
+        // var index_str = curr_rowNum + '_' + table_lengths.sub_lengths[curr_rowNum-5];
+
+        // var html = '';
+        // html += '<tr class="subTableRow">';
+        // html += '<td><button type="button" id="removeRow" class="btn btn-danger btn-sm" style="padding: 2px 6px; font-size: 12px;">&times;</button></td>';
+        // html += '<td><input type="text" class="form-control" id="' + index_str + '_subtitle" name="' + index_str + '_subtitle" value="{{ subkey|replace("\n", " ")|replace("\r", " ") }}" required></td>';
+        // html += '<td><input type="text" class="form-control" id="' + index_str + '_subvalue" name="' + index_str + '_subvalue" value="{{ subvalue|replace("\n", " ")|replace("\r", " ") }}" required></td>';
+        // html += '</tr>';
+
+        var html = '';
+        html += '<tr class="subTableRow">';
+        html += '<td><button type="button" id="removeRow" class="btn btn-danger btn-sm" style="padding: 2px 6px; font-size: 12px;">&times;</button></td>';
+        html += '<td><input type="text" class="form-control" id="' + index_str + '_new_subtitle" name="' + index_str + '_new_subtitle" value="{{ subkey|replace("\n", " ")|replace("\r", " ") }}" required></td>';
+        html += '<td><input type="text" class="form-control" id="' + index_str + '_new_subvalue" name="' + index_str + '_new_subvalue" value="{{ subvalue|replace("\n", " ")|replace("\r", " ") }}" required></td>';
+        html += '</tr>';
+
+        $(this).closest('tr').find('.subTable').append(html);
+    });
+
+
+    // 當點擊 removeRow 按鈕時刪除當前輸入框
+    $(document).on('click', '#removeRow', function () {
+
+        // var row_id = $(this).closest('.subTableRow').find('input').attr('id');
+        // var curr_rowNum = row_id[0];
+        // table_lengths.sub_lengths[curr_rowNum-5]--;  //第五個元素開始有subtable
+
+        $(this).closest('.subTableRow').remove();
+    });
+
+
+    $(document).ready(function() {
+        $('#btn-check-outlined').change(function() {
+            if (this.checked) {
+                $("#card_view").removeClass("col-md-12").addClass("col-md-7");
+                $("#preview_button").css("color", "#ffffff");
+            } else {
+                $("#card_view").removeClass("col-md-7").addClass("col-md-12");
+                $("#preview_button").css("color", "darkblue");
+            }
+            $('#file_preview').toggle();
+        });
+    });
+
+    $('.recognizer_table').on('submit', function(e) {
+
+        var url = $('#url_OCR_dashboard').data('url');
+
+        $(this).find('#recognizer_table_submit').remove();
+        
+        html = '<p><strong>已經提交成功！請查看下載的檔案<span class="file-types">result.csv</span></strong></p>';
+        html += '<a aria-current="page" href="#">';
+        html += '<img src="./static/images/top.png" width="40" height="35" alt="top">';
+        html += '</a>';
+        html += '&nbsp;&nbsp;&nbsp;<a href="' + url + '" class="link-primary">回到首頁，重新提交。</a>';
+
+        $(this).find('#submit_area').append(html);
+    });
+
+
+    $(document).ready(function(){
+        $('.dropdown-item').click(function(e){
+            e.preventDefault();
+            var target = $(this).attr('href'); // 獲取目標元素的ID
+            var navbarHeight = $('.navbar-light').height() + 8; // 獲取導航欄的高度，或使用一個固定值
+            var scrollToPosition = $(target).offset().top - navbarHeight; // 計算滾動到的位置
+
+            $('html, body').animate({scrollTop: scrollToPosition}, 0);
+        });
+    });
+    
+</script>

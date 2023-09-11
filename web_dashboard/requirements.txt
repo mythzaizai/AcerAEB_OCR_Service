@@ -1,0 +1,4 @@
+azure-core==1.28.0
+azure-ai-formrecognizer==3.2.0
+PyPDF2==3.0.1
+flask-socketio==5.3.5
