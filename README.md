@@ -2,11 +2,11 @@
 # Web Dashboard for Azure AI OCR Service
 
 
-##### [描述]
+#### [描述]
 
 本專案是一個基於 Flask 和 Azure AI OCR 建立的 Web 服務，用於單據辨識。
 
-##### [雲端部屬架構]
+#### [雲端部屬架構]
 ![OCR Flow Diagram](https://raw.githubusercontent.com/mythzaizai/AcerAEB_OCR_Service/af5cf12c8a7dc1d92a0df4a9bd26a4e332658db0/OCR_flow.jpg)
 ps.本專案亦可在本地執行
 
