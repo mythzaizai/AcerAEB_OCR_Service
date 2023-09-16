@@ -50,10 +50,6 @@ docker run -p 80:80 web_dashboard
 - [Azure OCR - Optical Character Recognition](https://learn.microsoft.com/zh-tw/azure/ai-services/computer-vision/overview-ocr)
 - [Azure web app (Flask)](https://learn.microsoft.com/en-us/azure/app-service/quickstart-python?tabs=flask%2Cwindows%2Cazure-cli%2Cvscode-deploy%2Cdeploy-instructions-azportal%2Cterminal-bash%2Cdeploy-instructions-zip-azcli)
 
-## LICENSE
-
-本專案採用 MIT 授權。有關詳細信息，請參閱 [LICENSE](LICENSE) 文件。
-
 ## Contact
 
 如果有任何問題或建議，請聯繫專案開發者:
