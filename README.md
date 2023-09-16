@@ -46,6 +46,9 @@ docker run -p 80:80 web_dashboard
 
 打開瀏覽器並訪問 [http://127.0.0.1](http://127.0.0.1) 來訪問 Web 服務的主頁面。
 
+## Demo Video
+[![Demo](https://img.youtube.com/vi/ZOiamGDrQxI/0.jpg)](https://www.youtube.com/watch?v=ZOiamGDrQxI)
+
 ## References
 - [Azure OCR - Optical Character Recognition](https://learn.microsoft.com/zh-tw/azure/ai-services/computer-vision/overview-ocr)
 - [Azure web app (Flask)](https://learn.microsoft.com/en-us/azure/app-service/quickstart-python?tabs=flask%2Cwindows%2Cazure-cli%2Cvscode-deploy%2Cdeploy-instructions-azportal%2Cterminal-bash%2Cdeploy-instructions-zip-azcli)
