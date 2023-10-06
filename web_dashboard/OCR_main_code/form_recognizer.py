@@ -5,8 +5,8 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 
 def setup_client():
 
-    endpoint = "https://form-recognizer-aeb.cognitiveservices.azure.com/"
-    credential = AzureKeyCredential("3fe3dc115b3f49f08f9ed7daa87ab29d")
+    endpoint = os.getenv("FormRecognizer_Endpoint")
+    credential = AzureKeyCredential(os.getenv("AImodel_Credential"))
     
     document_analysis_client = DocumentAnalysisClient(endpoint, credential)
 
