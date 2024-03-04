@@ -57,6 +57,6 @@ docker run -p 80:80 web_dashboard
 
 如果有任何問題或建議，請聯繫專案開發者:
 
-- **Email**: Hank.Lin@aceraeb.com
+- **Email**: mythzaizai@gmail.com
 
 
