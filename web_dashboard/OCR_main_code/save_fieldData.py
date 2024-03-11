@@ -13,7 +13,7 @@ def setup_DBconnection():
     host = "data-field-storage.postgres.database.azure.com" #<server-name>
     dbname = "postgres"                                     #<database-name>
     user = "OCR_admin"                                      #<admin-username>
-    password = "ej03xu3au4a83!"                             #<admin-password>
+    password = os.getenv("DB_password")              #<admin-password>
     sslmode = "require"
 
     # Construct connection string
@@ -38,10 +38,9 @@ def test(DBconnection):
     print("Finished creating table")
 
     # Insert some data into the table
-    DBcursor.execute("INSERT INTO inventory (name, quantity) VALUES (%s, %s);", ("banana", 150))
-    DBcursor.execute("INSERT INTO inventory (name, quantity) VALUES (%s, %s);", ("orange", 154))
-    DBcursor.execute("INSERT INTO inventory (name, quantity) VALUES (%s, %s);", ("apple", 100))
-    print("Inserted 3 rows of data")
+    DBcursor.execute("INSERT INTO inventory (name, quantity) VALUES (%s, %s);", ("cost", 990))
+
+    print("Inserted data")
 
 
     # Fetch all rows from table
