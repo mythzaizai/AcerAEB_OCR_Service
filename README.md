@@ -16,7 +16,7 @@ ps.本專案亦可在本地執行
 ```bash
 cd web_dashboard
 ```
-2. 確保你已經安裝了 Python 3.9 或更高版本。
+2. 確保你已經安裝了 Python 3.9。
 3. 安裝所需的 Python 套件：
 
 ```bash
